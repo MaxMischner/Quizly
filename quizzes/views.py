@@ -4,6 +4,8 @@ Views für Quiz-Management und Spielteilnahme.
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
+from google.genai.errors import ClientError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
@@ -80,26 +82,9 @@ class QuizViewSet(viewsets.ModelViewSet):
     
     def _process_youtube_url(self, youtube_url):
         """
-        Verarbeite YouTube-URL über Pipeline mit Fallback.
+        Verarbeite YouTube-URL über Pipeline.
         """
-        try:
-            return PipelineService().process_youtube_url(youtube_url)
-        except Exception:
-            return {
-                'title': 'Quiz Title',
-                'description': 'Quiz Description',
-                'questions': [{
-                    'order': 1,
-                    'question': 'Question 1',
-                    'answers': [
-                        {'text': 'Option A', 'is_correct': True},
-                        {'text': 'Option B', 'is_correct': False},
-                        {'text': 'Option C', 'is_correct': False},
-                        {'text': 'Option D', 'is_correct': False}
-                    ]
-                }],
-                'transcript': None
-            }
+        return PipelineService().process_youtube_url(youtube_url)
     
     def _create_quiz_from_data(self, user, quiz_data, youtube_url):
         """
@@ -139,12 +124,41 @@ class QuizViewSet(viewsets.ModelViewSet):
         input_serializer.is_valid(raise_exception=True)
         youtube_url = input_serializer.validated_data['url']
         
-        quiz_data = self._process_youtube_url(youtube_url)
-        quiz = self._create_quiz_from_data(request.user, quiz_data, youtube_url)
-        self._create_questions_and_answers(quiz, quiz_data.get('questions', []))
+        try:
+            quiz_data = self._process_youtube_url(youtube_url)
+            quiz = self._create_quiz_from_data(request.user, quiz_data, youtube_url)
+            self._create_questions_and_answers(quiz, quiz_data.get('questions', []))
+            
+            response_serializer = QuizSpecSerializer(quiz)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         
-        response_serializer = QuizSpecSerializer(quiz)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        except ClientError as e:
+            # Handle Gemini API errors (quota, rate limit, etc.)
+            error_message = str(e)
+            if '429' in error_message or 'RESOURCE_EXHAUSTED' in error_message:
+                return Response(
+                    {'error': 'Gemini API quota exceeded. Please try again later.'},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+            elif '403' in error_message or 'PERMISSION_DENIED' in error_message:
+                return Response(
+                    {'error': 'Invalid Gemini API key or insufficient permissions.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            else:
+                return Response(
+                    {'error': f'AI service error: {error_message}'},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE
+                )
+        
+        except Exception as e:
+            # Log unexpected errors
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {'error': 'Quiz generation failed. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @action(detail=True, methods=['post'])
     def start_quiz(self, request, pk=None):

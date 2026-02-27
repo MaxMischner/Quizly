@@ -67,9 +67,9 @@ class LoginView(views.APIView):
                 'refresh': str(refresh),
             }, status=status.HTTP_200_OK)
             response.set_cookie('access_token', str(refresh.access_token), 
-                              httponly=True, secure=True, samesite='Strict')
+                              httponly=True, secure=False, samesite='Lax')
             response.set_cookie('refresh_token', str(refresh), 
-                              httponly=True, secure=True, samesite='Strict')
+                              httponly=True, secure=False, samesite='Lax')
             return response
         
         return Response(
@@ -142,7 +142,7 @@ class TokenRefreshView(views.APIView):
             
             # Setze neuen Access Token Cookie
             response.set_cookie('access_token', new_access_token,
-                              httponly=True, secure=True, samesite='Strict')
+                              httponly=True, secure=False, samesite='Lax')
             
             return response
         except (InvalidToken, TokenError):
