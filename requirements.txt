@@ -1,0 +1,21 @@
+# Django & REST API
+Django==6.0.2
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.1
+django-cors-headers==4.9.0
+
+# AI & ML
+yt-dlp==2026.2.21
+openai-whisper==20250625
+google-generativeai==0.8.6
+
+# Utils
+python-dotenv==1.2.1
+requests==2.32.5
+Pillow==11.2.0
+
+# Development
+black==25.1.0
+flake8==7.1.1
+pytest==8.3.6
+pytest-django==4.9.0
