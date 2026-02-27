@@ -21,17 +21,17 @@ class RegisterSerializer(serializers.ModelSerializer):
     Validiert Passwörter und eindeutige E-Mail.
     """
     password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True)
+    confirmed_password = serializers.CharField(write_only=True)
     
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'password', 'password_confirm']
+        fields = ['username', 'email', 'password', 'confirmed_password']
     
     def validate(self, data):
         """
         Validiere Passwort-Übereinstimmung und E-Mail-Eindeutigkeit.
         """
-        if data['password'] != data.pop('password_confirm'):
+        if data['password'] != data.pop('confirmed_password'):
             msg = 'Passwörter stimmen nicht überein'
             raise serializers.ValidationError(msg)
         

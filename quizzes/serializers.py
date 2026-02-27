@@ -98,3 +98,51 @@ class QuizResponseSerializer(serializers.ModelSerializer):
         model = QuizResponse
         fields = ['id', 'quiz', 'started_at', 'completed_at', 'score', 'answers']
         read_only_fields = ['id', 'started_at']
+
+
+class QuizCreateSerializer(serializers.Serializer):
+    """
+    Input-Serializer für Quiz-Erstellung via YouTube-URL.
+    """
+    url = serializers.URLField()
+
+
+class QuizSpecQuestionSerializer(serializers.ModelSerializer):
+    """
+    Spec-Serializer für Quiz-Fragen im API-Format.
+    """
+    question_title = serializers.CharField(source='question_text')
+    question_options = serializers.SerializerMethodField()
+    answer = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    updated_at = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = ['id', 'question_title', 'question_options', 'answer', 'created_at', 'updated_at']
+
+    def get_question_options(self, obj):
+        return [a.answer_text for a in obj.answers.all()]
+
+    def get_answer(self, obj):
+        correct = obj.answers.filter(is_correct=True).first()
+        return correct.answer_text if correct else ''
+
+    def get_created_at(self, obj):
+        return obj.created_at
+
+    def get_updated_at(self, obj):
+        # Question hat kein updated_at Feld, nutze created_at.
+        return obj.created_at
+
+
+class QuizSpecSerializer(serializers.ModelSerializer):
+    """
+    Spec-Serializer für Quiz-Ausgaben.
+    """
+    video_url = serializers.CharField(source='youtube_url')
+    questions = QuizSpecQuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Quiz
+        fields = ['id', 'title', 'description', 'created_at', 'updated_at', 'video_url', 'questions']
