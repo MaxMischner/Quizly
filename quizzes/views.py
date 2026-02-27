@@ -78,45 +78,46 @@ class QuizViewSet(viewsets.ModelViewSet):
         response_serializer = QuizSpecSerializer(quiz)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
     
-    def create(self, request, *args, **kwargs):
+    def _process_youtube_url(self, youtube_url):
         """
-        Erstelle ein Quiz aus einer YouTube-URL.
+        Verarbeite YouTube-URL über Pipeline mit Fallback.
         """
-        input_serializer = QuizCreateSerializer(data=request.data)
-        input_serializer.is_valid(raise_exception=True)
-        youtube_url = input_serializer.validated_data['url']
-        
         try:
-            quiz_data = PipelineService().process_youtube_url(youtube_url)
+            return PipelineService().process_youtube_url(youtube_url)
         except Exception:
-            # Fallback fuer Tests/Entwicklung
-            quiz_data = {
+            return {
                 'title': 'Quiz Title',
                 'description': 'Quiz Description',
-                'questions': [
-                    {
-                        'order': 1,
-                        'question': 'Question 1',
-                        'answers': [
-                            {'text': 'Option A', 'is_correct': True},
-                            {'text': 'Option B', 'is_correct': False},
-                            {'text': 'Option C', 'is_correct': False},
-                            {'text': 'Option D', 'is_correct': False}
-                        ]
-                    }
-                ],
+                'questions': [{
+                    'order': 1,
+                    'question': 'Question 1',
+                    'answers': [
+                        {'text': 'Option A', 'is_correct': True},
+                        {'text': 'Option B', 'is_correct': False},
+                        {'text': 'Option C', 'is_correct': False},
+                        {'text': 'Option D', 'is_correct': False}
+                    ]
+                }],
                 'transcript': None
             }
-        
-        quiz = Quiz.objects.create(
-            user=request.user,
+    
+    def _create_quiz_from_data(self, user, quiz_data, youtube_url):
+        """
+        Erstelle Quiz-Objekt aus verarbeiteten Daten.
+        """
+        return Quiz.objects.create(
+            user=user,
             title=quiz_data.get('title', 'Quiz Title'),
             description=quiz_data.get('description', ''),
             youtube_url=youtube_url,
             transcript=quiz_data.get('transcript')
         )
-        
-        for q_index, q in enumerate(quiz_data.get('questions', []), start=1):
+    
+    def _create_questions_and_answers(self, quiz, questions_data):
+        """
+        Erstelle Fragen und Antworten für ein Quiz.
+        """
+        for q_index, q in enumerate(questions_data, start=1):
             question = Question.objects.create(
                 quiz=quiz,
                 question_text=q.get('question', ''),
@@ -129,6 +130,18 @@ class QuizViewSet(viewsets.ModelViewSet):
                     is_correct=ans.get('is_correct', False),
                     order=a_index
                 )
+    
+    def create(self, request, *args, **kwargs):
+        """
+        Erstelle ein Quiz aus einer YouTube-URL.
+        """
+        input_serializer = QuizCreateSerializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+        youtube_url = input_serializer.validated_data['url']
+        
+        quiz_data = self._process_youtube_url(youtube_url)
+        quiz = self._create_quiz_from_data(request.user, quiz_data, youtube_url)
+        self._create_questions_and_answers(quiz, quiz_data.get('questions', []))
         
         response_serializer = QuizSpecSerializer(quiz)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)

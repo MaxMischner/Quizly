@@ -182,3 +182,6 @@ cython_debug/
 
 # Frontend project
 project.Quizly/
+
+# Interne Checkliste
+CHECKLISTE_ANALYSE.md
