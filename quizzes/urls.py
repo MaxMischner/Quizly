@@ -1,15 +1,5 @@
-"""
-URL Routing für Quiz-Management.
-"""
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from quizzes import views
+"""Compatibility URL module for quiz endpoints."""
 
-app_name = 'quizzes'
+from quizzes.api.urls import urlpatterns
 
-router = DefaultRouter()
-router.register(r'', views.QuizViewSet, basename='quiz')
-
-urlpatterns = [
-    path('', include(router.urls)),
-]
+__all__ = ["urlpatterns"]

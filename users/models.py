@@ -3,9 +3,7 @@ from django.contrib.auth.models import AbstractUser
 
 
 class CustomUser(AbstractUser):
-    """
-    Custom User Model mit zusätzlichen Feldern.
-    """
+    """Custom user model with timestamp fields."""
     email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -18,9 +16,7 @@ class CustomUser(AbstractUser):
 
 
 class TokenBlacklist(models.Model):
-    """
-    Token Blacklist für ausgeloggte Tokens.
-    """
+    """Stores blacklisted refresh tokens after logout."""
     token = models.TextField(unique=True)
     blacklisted_at = models.DateTimeField(auto_now_add=True)
     

@@ -3,9 +3,7 @@ from users.models import CustomUser
 
 
 class Quiz(models.Model):
-    """
-    Quiz Model - Hauptmodell für Quizzes.
-    """
+    """Main model representing a generated quiz."""
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='quizzes')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -22,9 +20,7 @@ class Quiz(models.Model):
 
 
 class Question(models.Model):
-    """
-    Question Model - Fragen im Quiz.
-    """
+    """Question belonging to a quiz."""
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
     question_text = models.TextField()
     order = models.IntegerField()
@@ -38,9 +34,7 @@ class Question(models.Model):
 
 
 class Answer(models.Model):
-    """
-    Answer Model - Antwortmöglichkeiten für Fragen.
-    """
+    """Answer option for a question."""
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
     answer_text = models.CharField(max_length=255)
     is_correct = models.BooleanField(default=False)
@@ -54,9 +48,7 @@ class Answer(models.Model):
 
 
 class QuizResponse(models.Model):
-    """
-    QuizResponse Model - Benutzersession beim Quiz spielen.
-    """
+    """User quiz session tracking progress and score."""
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='quiz_responses')
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='responses')
     started_at = models.DateTimeField(auto_now_add=True)
@@ -71,9 +63,7 @@ class QuizResponse(models.Model):
 
 
 class UserAnswer(models.Model):
-    """
-    UserAnswer Model - Benutzerantworten pro Frage.
-    """
+    """Single answer submitted by a user in a quiz session."""
     quiz_response = models.ForeignKey(QuizResponse, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     selected_answer = models.ForeignKey(Answer, on_delete=models.SET_NULL, null=True, blank=True)
