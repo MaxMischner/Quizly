@@ -39,7 +39,7 @@ class QuizPartialUpdateTests(TestCase):
 			user=self.user,
 			title='Original Title',
 			description='Original Description',
-			youtube_url='https://www.youtube.com/watch?v=example'
+			youtube_url='https://www.youtube.com/watch?v=ZQ6kV4YbEU8'
 		)
 		self.question = Question.objects.create(
 			quiz=self.quiz,

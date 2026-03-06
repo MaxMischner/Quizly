@@ -39,7 +39,7 @@ class QuizDeleteTests(TestCase):
 			user=self.user,
 			title='Delete Quiz',
 			description='Delete Description',
-			youtube_url='https://www.youtube.com/watch?v=example'
+			youtube_url='https://www.youtube.com/watch?v=ZQ6kV4YbEU8'
 		)
 		self.detail_url = f'/api/quizzes/{self.quiz.id}/'
 

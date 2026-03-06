@@ -36,7 +36,7 @@ class QuizCreateTests(TestCase):
 		Unauthenticated requests should be rejected.
 		"""
 		response = self.client.post(self.quizzes_url, {
-			'url': 'https://www.youtube.com/watch?v=example'
+			'url': 'https://www.youtube.com/watch?v=ZQ6kV4YbEU8'
 		})
 
 		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -48,7 +48,7 @@ class QuizCreateTests(TestCase):
 		self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
 
 		response = self.client.post(self.quizzes_url, {
-			'url': 'https://www.youtube.com/watch?v=example'
+			'url': 'https://www.youtube.com/watch?v=ZQ6kV4YbEU8'
 		})
 
 		self.assertEqual(response.status_code, status.HTTP_201_CREATED)

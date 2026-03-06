@@ -39,7 +39,7 @@ class QuizDetailTests(TestCase):
 			user=self.user,
 			title='Quiz Title',
 			description='Quiz Description',
-			youtube_url='https://www.youtube.com/watch?v=example'
+			youtube_url='https://www.youtube.com/watch?v=ZQ6kV4YbEU8'
 		)
 		self.question = Question.objects.create(
 			quiz=self.quiz,
