@@ -56,7 +56,8 @@ class UserLogoutTests(TestCase):
         Test: Logout ohne Authentifizierung schlägt fehl.
         Erwartet: 401 Status Code.
         """
-        response = self.client.post(self.logout_url, {})
+        unauthenticated_client = APIClient()
+        response = unauthenticated_client.post(self.logout_url, {})
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -132,8 +133,9 @@ class UserLogoutTests(TestCase):
         Test: Logout mit ungültigem Token schlägt fehl.
         Erwartet: 401 Status Code.
         """
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer invalid_token_here')
-        response = self.client.post(self.logout_url, {})
+        unauthenticated_client = APIClient()
+        unauthenticated_client.credentials(HTTP_AUTHORIZATION='Bearer invalid_token_here')
+        response = unauthenticated_client.post(self.logout_url, {})
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -142,8 +144,9 @@ class UserLogoutTests(TestCase):
         Test: Logout mit ungültigem Authorization Header schlägt fehl.
         Erwartet: 401 Status Code.
         """
-        self.client.credentials(HTTP_AUTHORIZATION='InvalidFormat token')
-        response = self.client.post(self.logout_url, {})
+        unauthenticated_client = APIClient()
+        unauthenticated_client.credentials(HTTP_AUTHORIZATION='InvalidFormat token')
+        response = unauthenticated_client.post(self.logout_url, {})
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 

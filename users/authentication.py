@@ -1,6 +1,7 @@
 """
 Custom JWT authentication that reads the access token from HTTP-only cookies.
 """
+from django.conf import settings
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
@@ -11,7 +12,7 @@ class CookieJWTAuthentication(JWTAuthentication):
     """
 
     def authenticate(self, request):
-        raw_token = request.COOKIES.get("access_token")
+        raw_token = request.COOKIES.get(settings.JWT_ACCESS_COOKIE_NAME)
         if raw_token is None:
             return None  # No authentication, let other methods or AllowAny handle it
 

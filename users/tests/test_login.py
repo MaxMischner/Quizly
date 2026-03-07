@@ -72,6 +72,20 @@ class UserLoginTests(TestCase):
         cookie = response.cookies['refresh_token']
         self.assertTrue(cookie['httponly'])
 
+    def test_login_cookie_allows_profile_access_without_auth_header(self):
+        """
+        Test: Nach Login reicht das Access-Cookie fuer geschuetzte Endpoints.
+        Erwartet: 200 beim Profilabruf ohne Bearer Header.
+        """
+        login_response = self.client.post(self.login_url, self.valid_login_data)
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+
+        profile_url = reverse('profile')
+        profile_response = self.client.get(profile_url)
+
+        self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(profile_response.data['username'], 'testuser')
+
     def test_login_invalid_password(self):
         """
         Test: Login mit falshem Passwort schlägt fehl.

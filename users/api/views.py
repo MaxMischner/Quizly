@@ -1,6 +1,7 @@
 """Views responsible for user management and authentication."""
 
 from django.contrib.auth import authenticate
+from django.conf import settings
 from rest_framework import status, views
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -9,6 +10,20 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.api.serializers import LoginSerializer, RegisterSerializer, UserSerializer
 from users.models import TokenBlacklist
+
+
+def _set_auth_cookie(response, key: str, value: str, max_age: int) -> None:
+    """Set auth cookies with one shared, environment-driven policy."""
+    response.set_cookie(
+        key,
+        value,
+        max_age=max_age,
+        httponly=True,
+        secure=settings.JWT_COOKIE_SECURE,
+        samesite=settings.JWT_COOKIE_SAMESITE,
+        domain=settings.JWT_COOKIE_DOMAIN,
+        path="/",
+    )
 
 
 class RegisterView(views.APIView):
@@ -44,6 +59,8 @@ class LoginView(views.APIView):
             return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = RefreshToken.for_user(user)
+        access_lifetime_seconds = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
+        refresh_lifetime_seconds = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
         user_data = {"id": user.id, "username": user.username, "email": user.email}
         response = Response(
             {
@@ -54,8 +71,18 @@ class LoginView(views.APIView):
             },
             status=status.HTTP_200_OK,
         )
-        response.set_cookie("access_token", str(refresh.access_token), httponly=True, secure=False, samesite="Lax")
-        response.set_cookie("refresh_token", str(refresh), httponly=True, secure=False, samesite="Lax")
+        _set_auth_cookie(
+            response,
+            settings.JWT_ACCESS_COOKIE_NAME,
+            str(refresh.access_token),
+            access_lifetime_seconds,
+        )
+        _set_auth_cookie(
+            response,
+            settings.JWT_REFRESH_COOKIE_NAME,
+            str(refresh),
+            refresh_lifetime_seconds,
+        )
         return response
 
 
@@ -77,8 +104,18 @@ class LogoutView(views.APIView):
             {"detail": "Log-Out successfully! All Tokens will be deleted. Refresh token is now invalid."},
             status=status.HTTP_200_OK,
         )
-        response.delete_cookie("access_token")
-        response.delete_cookie("refresh_token")
+        response.delete_cookie(
+            settings.JWT_ACCESS_COOKIE_NAME,
+            domain=settings.JWT_COOKIE_DOMAIN,
+            path="/",
+            samesite=settings.JWT_COOKIE_SAMESITE,
+        )
+        response.delete_cookie(
+            settings.JWT_REFRESH_COOKIE_NAME,
+            domain=settings.JWT_COOKIE_DOMAIN,
+            path="/",
+            samesite=settings.JWT_COOKIE_SAMESITE,
+        )
         return response
 
 
@@ -89,7 +126,7 @@ class TokenRefreshView(views.APIView):
 
     def post(self, request):
         """Refresh access token from request body or cookies."""
-        refresh_token = request.data.get("refresh") or request.COOKIES.get("refresh_token")
+        refresh_token = request.data.get("refresh") or request.COOKIES.get(settings.JWT_REFRESH_COOKIE_NAME)
         if not refresh_token:
             return Response({"detail": "No refresh token provided"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -97,7 +134,13 @@ class TokenRefreshView(views.APIView):
             refresh = RefreshToken(refresh_token)
             new_access_token = str(refresh.access_token)
             response = Response({"detail": "Token refreshed", "access": new_access_token}, status=status.HTTP_200_OK)
-            response.set_cookie("access_token", new_access_token, httponly=True, secure=False, samesite="Lax")
+            access_lifetime_seconds = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
+            _set_auth_cookie(
+                response,
+                settings.JWT_ACCESS_COOKIE_NAME,
+                new_access_token,
+                access_lifetime_seconds,
+            )
             return response
         except (InvalidToken, TokenError):
             return Response({"detail": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
