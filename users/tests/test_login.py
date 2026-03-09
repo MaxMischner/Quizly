@@ -257,6 +257,20 @@ class UserLoginTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['user']['id'], self.user.id)
 
+    def test_login_cookie_auth_can_access_profile(self):
+        """
+        Test: Nach Login kann Profil per Cookie-Auth ohne Bearer Header geladen werden.
+        Erwartet: 200 Status Code.
+        """
+        login_response = self.client.post(self.login_url, self.valid_login_data)
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+
+        profile_url = reverse('profile')
+        profile_response = self.client.get(profile_url)
+
+        self.assertEqual(profile_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(profile_response.data['username'], 'testuser')
+
     def test_login_multiple_attempts(self):
         """
         Test: Mehrere Login-Versuche funktionieren (no rate limiting).

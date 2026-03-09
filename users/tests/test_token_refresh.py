@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
-from users.models import CustomUser
+from users.models import CustomUser, TokenBlacklist
 
 
 class TokenRefreshTests(TestCase):
@@ -262,3 +262,15 @@ class TokenRefreshTests(TestCase):
 
         # Sollte erfolgreich sein (Body Token verwendet)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_token_refresh_rejects_blacklisted_token(self):
+        """
+        Test: Ein blacklisteter Refresh Token darf keinen neuen Access Token erhalten.
+        Erwartet: 401 Status Code.
+        """
+        TokenBlacklist.objects.create(token=self.refresh_token)
+
+        response = self.client.post(self.refresh_url, {'refresh': self.refresh_token})
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data['detail'], 'Invalid refresh token')

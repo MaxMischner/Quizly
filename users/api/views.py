@@ -1,5 +1,6 @@
 """Views responsible for user management and authentication."""
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from rest_framework import status, views
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,6 +10,25 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.api.serializers import LoginSerializer, RegisterSerializer, UserSerializer
 from users.models import TokenBlacklist
+
+
+def _set_auth_cookies(response: Response, access_token: str, refresh_token: str | None = None) -> None:
+    """Set auth cookies with environment-aware security flags."""
+    response.set_cookie(
+        "access_token",
+        access_token,
+        httponly=True,
+        secure=settings.JWT_COOKIE_SECURE,
+        samesite=settings.JWT_COOKIE_SAMESITE,
+    )
+    if refresh_token:
+        response.set_cookie(
+            "refresh_token",
+            refresh_token,
+            httponly=True,
+            secure=settings.JWT_COOKIE_SECURE,
+            samesite=settings.JWT_COOKIE_SAMESITE,
+        )
 
 
 class RegisterView(views.APIView):
@@ -54,8 +74,7 @@ class LoginView(views.APIView):
             },
             status=status.HTTP_200_OK,
         )
-        response.set_cookie("access_token", str(refresh.access_token), httponly=True, secure=False, samesite="Lax")
-        response.set_cookie("refresh_token", str(refresh), httponly=True, secure=False, samesite="Lax")
+        _set_auth_cookies(response, str(refresh.access_token), str(refresh))
         return response
 
 
@@ -66,7 +85,7 @@ class LogoutView(views.APIView):
 
     def post(self, request):
         """Blacklist provided refresh token and clear auth cookies."""
-        refresh_token = request.data.get("refresh")
+        refresh_token = request.data.get("refresh") or request.COOKIES.get("refresh_token")
         if refresh_token:
             try:
                 TokenBlacklist.objects.create(token=refresh_token)
@@ -94,10 +113,13 @@ class TokenRefreshView(views.APIView):
             return Response({"detail": "No refresh token provided"}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
+            if TokenBlacklist.objects.filter(token=refresh_token).exists():
+                return Response({"detail": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
+
             refresh = RefreshToken(refresh_token)
             new_access_token = str(refresh.access_token)
             response = Response({"detail": "Token refreshed", "access": new_access_token}, status=status.HTTP_200_OK)
-            response.set_cookie("access_token", new_access_token, httponly=True, secure=False, samesite="Lax")
+            _set_auth_cookies(response, new_access_token)
             return response
         except (InvalidToken, TokenError):
             return Response({"detail": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
