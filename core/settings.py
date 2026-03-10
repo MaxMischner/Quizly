@@ -156,8 +156,13 @@ SIMPLE_JWT = {
 
 JWT_ACCESS_COOKIE_NAME = os.getenv("JWT_ACCESS_COOKIE_NAME", "access_token")
 JWT_REFRESH_COOKIE_NAME = os.getenv("JWT_REFRESH_COOKIE_NAME", "refresh_token")
-JWT_COOKIE_SECURE = _get_env_bool("JWT_COOKIE_SECURE", not DEBUG)
-JWT_COOKIE_SAMESITE = os.getenv("JWT_COOKIE_SAMESITE", "Lax")
+
+# For local frontend/backend on different ports, cookies need SameSite=None.
+# Browsers require `Secure` for SameSite=None; loopback hosts are treated as secure contexts.
+_jwt_samesite_default = "None" if DEBUG else "Lax"
+JWT_COOKIE_SAMESITE = os.getenv("JWT_COOKIE_SAMESITE", _jwt_samesite_default)
+_jwt_secure_default = JWT_COOKIE_SAMESITE.lower() == "none" if DEBUG else not DEBUG
+JWT_COOKIE_SECURE = _get_env_bool("JWT_COOKIE_SECURE", _jwt_secure_default)
 JWT_COOKIE_DOMAIN = os.getenv("JWT_COOKIE_DOMAIN") or None
 
 CORS_ALLOWED_ORIGINS = [
@@ -170,8 +175,4 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-# JWT cookie configuration
-JWT_COOKIE_SECURE = _get_env_bool("JWT_COOKIE_SECURE", not DEBUG)
-JWT_COOKIE_SAMESITE = os.getenv("JWT_COOKIE_SAMESITE", "Lax")
 

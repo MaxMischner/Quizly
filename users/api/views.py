@@ -15,20 +15,27 @@ from users.models import TokenBlacklist
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str | None = None) -> None:
     """Set auth cookies with environment-aware security flags."""
+    access_cookie_name = getattr(settings, "JWT_ACCESS_COOKIE_NAME", "access_token")
+    refresh_cookie_name = getattr(settings, "JWT_REFRESH_COOKIE_NAME", "refresh_token")
+
     response.set_cookie(
-        "access_token",
+        access_cookie_name,
         access_token,
         httponly=True,
         secure=settings.JWT_COOKIE_SECURE,
         samesite=settings.JWT_COOKIE_SAMESITE,
+        domain=settings.JWT_COOKIE_DOMAIN,
+        path="/",
     )
     if refresh_token:
         response.set_cookie(
-            "refresh_token",
+            refresh_cookie_name,
             refresh_token,
             httponly=True,
             secure=settings.JWT_COOKIE_SECURE,
             samesite=settings.JWT_COOKIE_SAMESITE,
+            domain=settings.JWT_COOKIE_DOMAIN,
+            path="/",
         )
 
 

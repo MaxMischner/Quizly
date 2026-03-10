@@ -133,7 +133,12 @@ class QuizViewSet(viewsets.ModelViewSet):
             error_message = str(exc)
             if "429" in error_message or "RESOURCE_EXHAUSTED" in error_message:
                 return Response(
-                    {"error": "Gemini API quota exceeded. Please try again later."},
+                    {
+                        "error": "Gemini API quota exceeded. Please try again later.",
+                        "error_type": "ai_quota_exceeded",
+                        "error_code": "GEMINI_RESOURCE_EXHAUSTED",
+                        "provider": "gemini",
+                    },
                     status=status.HTTP_429_TOO_MANY_REQUESTS,
                 )
             if "403" in error_message or "PERMISSION_DENIED" in error_message:
