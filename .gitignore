@@ -182,8 +182,7 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-# Frontend project (exclude complete frontend from git)
-/project.Quizly/
+
 
 # Interne Checkliste
 CHECKLISTE_ANALYSE.md
