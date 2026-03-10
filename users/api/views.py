@@ -1,5 +1,6 @@
 """Views responsible for user management and authentication."""
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.conf import settings
 from rest_framework import status, views
@@ -12,18 +13,23 @@ from users.api.serializers import LoginSerializer, RegisterSerializer, UserSeria
 from users.models import TokenBlacklist
 
 
-def _set_auth_cookie(response, key: str, value: str, max_age: int) -> None:
-    """Set auth cookies with one shared, environment-driven policy."""
+def _set_auth_cookies(response: Response, access_token: str, refresh_token: str | None = None) -> None:
+    """Set auth cookies with environment-aware security flags."""
     response.set_cookie(
-        key,
-        value,
-        max_age=max_age,
+        "access_token",
+        access_token,
         httponly=True,
         secure=settings.JWT_COOKIE_SECURE,
         samesite=settings.JWT_COOKIE_SAMESITE,
-        domain=settings.JWT_COOKIE_DOMAIN,
-        path="/",
     )
+    if refresh_token:
+        response.set_cookie(
+            "refresh_token",
+            refresh_token,
+            httponly=True,
+            secure=settings.JWT_COOKIE_SECURE,
+            samesite=settings.JWT_COOKIE_SAMESITE,
+        )
 
 
 class RegisterView(views.APIView):
@@ -71,18 +77,7 @@ class LoginView(views.APIView):
             },
             status=status.HTTP_200_OK,
         )
-        _set_auth_cookie(
-            response,
-            settings.JWT_ACCESS_COOKIE_NAME,
-            str(refresh.access_token),
-            access_lifetime_seconds,
-        )
-        _set_auth_cookie(
-            response,
-            settings.JWT_REFRESH_COOKIE_NAME,
-            str(refresh),
-            refresh_lifetime_seconds,
-        )
+        _set_auth_cookies(response, str(refresh.access_token), str(refresh))
         return response
 
 
@@ -93,7 +88,7 @@ class LogoutView(views.APIView):
 
     def post(self, request):
         """Blacklist provided refresh token and clear auth cookies."""
-        refresh_token = request.data.get("refresh")
+        refresh_token = request.data.get("refresh") or request.COOKIES.get("refresh_token")
         if refresh_token:
             try:
                 TokenBlacklist.objects.create(token=refresh_token)
@@ -131,16 +126,13 @@ class TokenRefreshView(views.APIView):
             return Response({"detail": "No refresh token provided"}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
+            if TokenBlacklist.objects.filter(token=refresh_token).exists():
+                return Response({"detail": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
+
             refresh = RefreshToken(refresh_token)
             new_access_token = str(refresh.access_token)
             response = Response({"detail": "Token refreshed", "access": new_access_token}, status=status.HTTP_200_OK)
-            access_lifetime_seconds = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
-            _set_auth_cookie(
-                response,
-                settings.JWT_ACCESS_COOKIE_NAME,
-                new_access_token,
-                access_lifetime_seconds,
-            )
+            _set_auth_cookies(response, new_access_token)
             return response
         except (InvalidToken, TokenError):
             return Response({"detail": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
