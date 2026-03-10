@@ -1,5 +1,6 @@
 """Views responsible for quiz management and gameplay actions."""
 
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -20,6 +21,8 @@ from quizzes.api.serializers import (
 )
 from quizzes.models import Answer, Question, Quiz, QuizResponse, UserAnswer
 from quizzes.services.pipeline import PipelineService
+
+logger = logging.getLogger(__name__)
 
 
 class QuizViewSet(viewsets.ModelViewSet):
@@ -142,9 +145,13 @@ class QuizViewSet(viewsets.ModelViewSet):
                 {"error": f"AI service error: {error_message}"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-        except Exception:
+        except Exception as exc:
+            logger.exception("Quiz generation failed for URL: %s", youtube_url)
+            message = "Quiz generation failed. Please try again."
+            if settings.DEBUG:
+                message = f"Quiz generation failed: {exc}"
             return Response(
-                {"error": "Quiz generation failed. Please try again."},
+                {"error": message},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

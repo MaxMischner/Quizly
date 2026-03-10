@@ -1,6 +1,7 @@
 """AI quiz generation services."""
 
 import json
+import os
 
 from google import genai
 
@@ -12,10 +13,11 @@ class QuizGeneratorService:
 
     def __init__(self, api_key: str | None = None):
         """Initialize the Gemini client with an explicit or environment API key."""
-        if api_key:
-            self.client = genai.Client(api_key=api_key)
-        else:
-            self.client = genai.Client()
+        resolved_api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if resolved_api_key:
+            self.client = genai.Client(api_key=resolved_api_key)
+            return
+        self.client = genai.Client()
 
     def generate_quiz(self, transcript: str) -> dict:
         """Generate a quiz object from transcript text."""
