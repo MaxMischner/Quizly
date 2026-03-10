@@ -1,10 +1,8 @@
-# Quizly Backend API
+﻿# Quizly
 
 ## Project Overview
-Quizly is a Django REST Framework backend that turns YouTube videos into quizzes.
-It provides authentication endpoints, quiz CRUD endpoints, and quiz play endpoints.
-
-This repository is backend-only and can be run locally without Docker.
+Quizly is built as a Django REST Framework backend that turns YouTube videos into quizzes.
+This repository now also contains a static frontend (HTML/CSS/JS assets) that consumes the API.
 
 ## Requirements
 - Python 3.10+
@@ -12,7 +10,7 @@ This repository is backend-only and can be run locally without Docker.
 - `venv`
 - FFmpeg (required for audio extraction from YouTube)
 
-## Local Development Setup
+## Local Backend Setup
 ```bash
 git clone https://github.com/MaxMischner/Quizly.git
 cd Quizly
@@ -34,7 +32,7 @@ venv\Scripts\Activate.ps1
 ```
 
 ## Environment Variables
-Configure your `.env` file with at least the following values:
+Configure your `.env` file with at least:
 
 ```env
 DEBUG=True
@@ -44,20 +42,13 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
-Notes:
-- `ALLOWED_HOSTS` accepts comma-separated values.
-- `CORS_ALLOWED_ORIGINS` accepts comma-separated origins.
-
-## Running the Server
-Run database migrations and start the API server:
-
+## Running the Backend
 ```bash
 python manage.py migrate
 python manage.py runserver
 ```
 
-Optional verification commands:
-
+Optional checks:
 ```bash
 python manage.py check
 python manage.py test
@@ -80,9 +71,17 @@ Core endpoints:
 - `GET /api/quizzes/today/`
 - `GET /api/quizzes/last_seven_days/`
 
-## Optional: Docker Deployment
-Docker is optional and not required for local backend development.
+## Frontend
+Frontend assets and pages are included in:
+- `index.html`
+- `pages/`
+- `shared/`
+- `assets/`
 
+To run the frontend locally, serve the repo with a local web server (for example VS Code Live Server) while the backend API is running.
+
+## Optional Docker Deployment
+Docker is optional and not required for local backend development.
 If you want to use Docker, keep and use these files when available:
 - `Dockerfile`
 - `compose.yaml`

@@ -187,3 +187,9 @@ cython_debug/
 
 # Interne Checkliste
 CHECKLISTE_ANALYSE.md
+
+/.idea
+/node_modules
+package.json
+package-lock.json
+.DS_Store
