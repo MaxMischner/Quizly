@@ -45,32 +45,3 @@ class Answer(models.Model):
     
     def __str__(self):
         return f"{self.answer_text[:30]}"
-
-
-class QuizResponse(models.Model):
-    """User quiz session tracking progress and score."""
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='quiz_responses')
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='responses')
-    started_at = models.DateTimeField(auto_now_add=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
-    score = models.IntegerField(null=True, blank=True)
-    
-    class Meta:
-        ordering = ['-started_at']
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.quiz.title}"
-
-
-class UserAnswer(models.Model):
-    """Single answer submitted by a user in a quiz session."""
-    quiz_response = models.ForeignKey(QuizResponse, on_delete=models.CASCADE, related_name='answers')
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    selected_answer = models.ForeignKey(Answer, on_delete=models.SET_NULL, null=True, blank=True)
-    answered_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['question__order']
-    
-    def __str__(self):
-        return f"{self.quiz_response} - Q{self.question.order}"

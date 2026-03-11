@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from quizzes.models import Answer, Question, Quiz, QuizResponse, UserAnswer
+from quizzes.models import Answer, Question, Quiz
 
 
 class AnswerSerializer(serializers.ModelSerializer):
@@ -64,33 +64,6 @@ class QuizDetailSerializer(serializers.ModelSerializer):
     def get_question_count(self, obj):
         """Return number of questions in quiz."""
         return obj.questions.count()
-
-
-class UserAnswerSerializer(serializers.ModelSerializer):
-    """Serialize answers submitted by users."""
-
-    answer_text = serializers.CharField(source="selected_answer.answer_text", read_only=True)
-    is_correct = serializers.SerializerMethodField()
-
-    class Meta:
-        model = UserAnswer
-        fields = ["id", "question", "selected_answer", "answer_text", "is_correct", "answered_at"]
-        read_only_fields = ["id", "answered_at"]
-
-    def get_is_correct(self, obj):
-        """Return whether selected answer is correct."""
-        return bool(obj.selected_answer and obj.selected_answer.is_correct)
-
-
-class QuizResponseSerializer(serializers.ModelSerializer):
-    """Serialize quiz session progress and score."""
-
-    answers = UserAnswerSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = QuizResponse
-        fields = ["id", "quiz", "started_at", "completed_at", "score", "answers"]
-        read_only_fields = ["id", "started_at"]
 
 
 class QuizCreateSerializer(serializers.Serializer):

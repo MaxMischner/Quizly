@@ -1,6 +1,6 @@
 """Admin configuration for quiz management."""
 from django.contrib import admin
-from quizzes.models import Quiz, Question, Answer, UserAnswer
+from quizzes.models import Quiz, Question, Answer
 
 
 class AnswerInline(admin.TabularInline):
@@ -62,19 +62,4 @@ class AnswerAdmin(admin.ModelAdmin):
     search_fields = ['answer_text', 'question__question_text']
     readonly_fields = ['question']
 
-
-@admin.register(UserAnswer)
-class UserAnswerAdmin(admin.ModelAdmin):
-    """Admin configuration for user answers."""
-    list_display = ['quiz_response', 'question', 'selected_answer', 'is_correct']
-    list_filter = ['question__quiz', 'answered_at']
-    search_fields = ['quiz_response__user__username']
-    readonly_fields = ['answered_at', 'quiz_response', 'question']
-    
-    def is_correct(self, obj):
-        """Return answer correctness in admin list view."""
-        if obj.selected_answer:
-            return obj.selected_answer.is_correct
-        return "Not answered"
-    is_correct.short_description = "Correct"
 

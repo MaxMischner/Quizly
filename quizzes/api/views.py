@@ -14,12 +14,10 @@ from rest_framework.response import Response
 
 from quizzes.api.serializers import (
     QuizCreateSerializer,
-    QuizResponseSerializer,
     QuizSerializer,
     QuizSpecSerializer,
-    UserAnswerSerializer,
 )
-from quizzes.models import Answer, Question, Quiz, QuizResponse, UserAnswer
+from quizzes.models import Answer, Question, Quiz
 from quizzes.services.pipeline import PipelineService
 
 logger = logging.getLogger(__name__)
@@ -159,59 +157,6 @@ class QuizViewSet(viewsets.ModelViewSet):
                 {"error": message},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-    @action(detail=True, methods=["post"])
-    def start_quiz(self, request, pk=None):
-        """Start a quiz session for the authenticated user."""
-        quiz = self.get_object()
-        response = QuizResponse.objects.create(user=request.user, quiz=quiz)
-        serializer = QuizResponseSerializer(response)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=["post"])
-    def submit_answer(self, request, pk=None):
-        """Store one answer for an active quiz response."""
-        required_fields = ["response_id", "question_id", "answer_id"]
-        for field in required_fields:
-            if not request.data.get(field):
-                return Response({"error": f"{field} is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            quiz_response = QuizResponse.objects.get(id=request.data.get("response_id"))
-            question = Question.objects.get(id=request.data.get("question_id"))
-            answer = Answer.objects.get(id=request.data.get("answer_id"))
-        except (QuizResponse.DoesNotExist, Question.DoesNotExist, Answer.DoesNotExist) as exc:
-            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-
-        user_answer = UserAnswer.objects.create(
-            quiz_response=quiz_response,
-            question=question,
-            selected_answer=answer,
-        )
-        serializer = UserAnswerSerializer(user_answer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=["post"])
-    def complete_quiz(self, request, pk=None):
-        """Complete quiz session and calculate score percentage."""
-        response_id = request.data.get("response_id")
-        if not response_id:
-            return Response({"error": "response_id is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            quiz_response = QuizResponse.objects.get(id=response_id)
-        except QuizResponse.DoesNotExist:
-            return Response({"error": "QuizResponse not found"}, status=status.HTTP_400_BAD_REQUEST)
-
-        quiz_response.completed_at = timezone.now()
-        correct_answers = quiz_response.answers.filter(selected_answer__is_correct=True).count()
-        total_questions = quiz_response.quiz.questions.count()
-        score = int((correct_answers / total_questions) * 100)
-        quiz_response.score = score
-        quiz_response.save()
-
-        serializer = QuizResponseSerializer(quiz_response)
-        return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def today(self, request):

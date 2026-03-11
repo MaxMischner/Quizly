@@ -5,11 +5,9 @@ from quizzes.api.serializers import (
     QuestionSerializer,
     QuizCreateSerializer,
     QuizDetailSerializer,
-    QuizResponseSerializer,
     QuizSerializer,
     QuizSpecQuestionSerializer,
     QuizSpecSerializer,
-    UserAnswerSerializer,
 )
 
 __all__ = [
@@ -17,8 +15,6 @@ __all__ = [
     "QuestionSerializer",
     "QuizSerializer",
     "QuizDetailSerializer",
-    "UserAnswerSerializer",
-    "QuizResponseSerializer",
     "QuizCreateSerializer",
     "QuizSpecQuestionSerializer",
     "QuizSpecSerializer",
