@@ -77,7 +77,8 @@ class QuizPartialUpdateTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.patch(self.detail_url, {
+		anon_client = APIClient()
+		response = anon_client.patch(self.detail_url, {
 			'title': 'Partially Updated Title'
 		})
 
