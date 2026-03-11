@@ -47,7 +47,8 @@ class QuizDeleteTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.delete(self.detail_url)
+		anon_client = APIClient()
+		response = anon_client.delete(self.detail_url)
 
 		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 

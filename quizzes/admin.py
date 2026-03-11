@@ -1,6 +1,6 @@
 """Admin configuration for quiz management."""
 from django.contrib import admin
-from quizzes.models import Quiz, Question, Answer, QuizResponse, UserAnswer
+from quizzes.models import Quiz, Question, Answer, UserAnswer
 
 
 class AnswerInline(admin.TabularInline):
@@ -61,20 +61,6 @@ class AnswerAdmin(admin.ModelAdmin):
     list_filter = ['is_correct', 'question__quiz']
     search_fields = ['answer_text', 'question__question_text']
     readonly_fields = ['question']
-
-
-@admin.register(QuizResponse)
-class QuizResponseAdmin(admin.ModelAdmin):
-    """Admin configuration for quiz response sessions."""
-    list_display = ['user', 'quiz', 'started_at', 'score', 'status']
-    list_filter = ['started_at', 'completed_at', 'quiz']
-    search_fields = ['user__username', 'quiz__title']
-    readonly_fields = ['started_at', 'user', 'quiz']
-    
-    def status(self, obj):
-        """Return completion status label for a quiz response."""
-        return "Completed" if obj.completed_at else "In progress"
-    status.short_description = "Status"
 
 
 @admin.register(UserAnswer)

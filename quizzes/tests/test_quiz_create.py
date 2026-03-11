@@ -35,7 +35,8 @@ class QuizCreateTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.post(self.quizzes_url, {
+		anon_client = APIClient()
+		response = anon_client.post(self.quizzes_url, {
 			'url': 'https://www.youtube.com/watch?v=ZQ6kV4YbEU8'
 		})
 

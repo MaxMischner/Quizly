@@ -2,33 +2,39 @@
 
 ## Project Overview
 Quizly is built as a Django REST Framework backend that turns YouTube videos into quizzes.
-This repository now also contains a static frontend (HTML/CSS/JS assets) that consumes the API.
+This repository also contains a static frontend (HTML/CSS/JS assets) that consumes the API.
 
 ## Requirements
-- Python 3.10+
+- Python 3.12+ (required by Django 6.0.x)
 - `pip`
 - `venv`
 - FFmpeg (required for audio extraction from YouTube)
+
+Current local environment (this repository): Python 3.14.0
 
 ## Local Backend Setup
 ```bash
 git clone https://github.com/MaxMischner/Quizly.git
 cd Quizly
 
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+
+# Linux/macOS
+source .venv/bin/activate
 
 pip install -r requirements.txt
 
+# Linux/macOS
 cp .env.example .env
 
 python manage.py migrate
 python manage.py runserver
 ```
 
-Windows activation equivalent:
+Windows equivalents:
 ```powershell
-venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1
+Copy-Item .env.example .env
 ```
 
 ## Environment Variables
@@ -73,20 +79,9 @@ Core endpoints:
 
 ## Frontend
 Frontend assets and pages are included in:
-- `index.html`
-- `pages/`
-- `shared/`
-- `assets/`
+- `project.Quizly/index.html`
+- `project.Quizly/pages/`
+- `project.Quizly/shared/`
+- `project.Quizly/assets/`
 
-To run the frontend locally, serve the repo with a local web server (for example VS Code Live Server) while the backend API is running.
-
-## Optional Docker Deployment
-Docker is optional and not required for local backend development.
-If you want to use Docker, keep and use these files when available:
-- `Dockerfile`
-- `compose.yaml`
-
-Typical optional Docker flow:
-```bash
-docker compose up --build
-```
+To run the frontend locally, open `project.Quizly/index.html` via a local web server (for example VS Code Live Server) while the backend API is running.

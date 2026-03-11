@@ -35,7 +35,8 @@ class QuizListTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.get(self.quizzes_url)
+		anon_client = APIClient()
+		response = anon_client.get(self.quizzes_url)
 
 		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 

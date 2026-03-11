@@ -37,7 +37,8 @@ class QuizTodayTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.get(self.today_url)
+		anon_client = APIClient()
+		response = anon_client.get(self.today_url)
 		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 	def test_today_returns_todays_quizzes(self):
@@ -116,7 +117,8 @@ class QuizLastSevenDaysTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.get(self.last_seven_days_url)
+		anon_client = APIClient()
+		response = anon_client.get(self.last_seven_days_url)
 		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 	def test_last_seven_days_returns_recent_quizzes(self):

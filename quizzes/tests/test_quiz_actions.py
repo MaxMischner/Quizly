@@ -49,7 +49,8 @@ class QuizStartTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.post(self.start_url)
+		anon_client = APIClient()
+		response = anon_client.post(self.start_url)
 		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 	def test_start_quiz_success(self):
@@ -154,7 +155,8 @@ class QuizSubmitAnswerTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.post(self.submit_url, {
+		anon_client = APIClient()
+		response = anon_client.post(self.submit_url, {
 			'response_id': self.quiz_response.id,
 			'question_id': self.question.id,
 			'answer_id': self.answer1.id
@@ -287,7 +289,8 @@ class QuizCompleteTests(TestCase):
 		"""
 		Unauthenticated requests should be rejected.
 		"""
-		response = self.client.post(self.complete_url, {
+		anon_client = APIClient()
+		response = anon_client.post(self.complete_url, {
 			'response_id': self.quiz_response.id
 		})
 		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
